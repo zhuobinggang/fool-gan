@@ -34,6 +34,36 @@ dataloader_valid = torch.utils.data.DataLoader(dataset_valid,
                                           shuffle=True,
                                           num_workers=4)
 
+def train_info_gan(m, epoch = 20):
+  for i in range(epoch):
+    losses = []
+    dis_loss = []
+    gen_loss = []
+    q_loss = []
+    counter = 0
+    for x, t in dataloader_train:
+      counter += len(x)
+      d, g, q = m.train(x)
+      losses.append(sum([d, g, q]))
+      dis_loss.append(d)
+      gen_loss.append(g)
+      q_loss.append(q)
+      print(f'epoch{i}: {counter}/60000')
+    plot_infogan(m, f'epoch_{i+1}')
+    print(f'AVG loss {np.average(losses)}, dl {np.average(dis_loss)}, gl {np.average(gen_loss)}, ql {np.average(q_loss)}')
+  return m
+
+def plot_infogan(m, name):
+  fig, axs = plt.subplots(1, 10, figsize=(30, 3))
+  for i in range(0, 10): 
+    fake = m.fake_x([i]).view(28, 28).detach().numpy()
+    axs[i].imshow(fake, 'gray')
+  plt.tight_layout()
+  plt.savefig(f'{name}.png')
+  plt.clf()
+  plt.close('all')
+  
+
 def train(m, epoch = 20):
   for i in range(epoch):
     losses = []
@@ -89,6 +119,9 @@ def test(model):
 # ===========================
 
 class GAN(nn.Module):
+  def init_hook(self):
+    pass
+
   def __init__(self):
     super().__init__()
     # self.fw1 = nn.Linear(28*28, 28*14)
