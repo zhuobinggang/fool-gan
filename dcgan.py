@@ -1,6 +1,18 @@
-from gan2 import *
+import torch
+t = torch
+from itertools import chain
+import torch.nn as nn
+import torch.nn.functional as F
+from torchvision import datasets, transforms
+import numpy as np
+from torch import optim
+import matplotlib.pyplot as plt
+import numpy as np
+import random as R
+from importlib import reload
+import ds
 
-class DCGAN(GAN_Vanilla):
+class DCGAN(nn.Module):
   def __init__(self):
     super().__init__()
     self.noise_size = noise_size = 64
@@ -42,6 +54,10 @@ class DCGAN(GAN_Vanilla):
     self.H = 28
     self.C = 1
 
+  def init_optim(self):
+    self.OptG = optim.AdamW(chain(self.G.parameters()), lr=0.001)
+    self.OptD = optim.AdamW(chain(self.D.parameters()), lr=0.001)
+
   # return loss
   # blend_x: (batch, img_size) float
   # marks: (batch) long
@@ -77,4 +93,34 @@ class DCGAN(GAN_Vanilla):
     dl = self.td(xs)
     gl = self.tg(len(xs))
     return dl.detach().item(), gl.detach().item()
+
+
+# ================================== scripts =====================================
+
+def plot_random(m, name = 'dd'):
+  fig, axs = plt.subplots(1, 10, figsize=(30, 3))
+  for i in range(0, 10): 
+    fake = m.fake_x(1).view(28, 28).detach().numpy()
+    axs[i].imshow(fake, 'gray')
+  plt.tight_layout()
+  plt.savefig(f'{name}.png')
+  plt.clf()
+  plt.close('all')
+
+def train_vanilla(m, epoch = 20):
+  for i in range(epoch):
+    losses = []
+    dis_loss = []
+    gen_loss = []
+    counter = 0
+    for x, t in ds.dataloader_train:
+      counter += len(x)
+      dl, gl = m.train(x)
+      losses.append(dl + gl)
+      dis_loss.append(dl)
+      gen_loss.append(gl)
+      print(f'epoch{i}: {counter}/60000')
+    plot_random(m, f'epoch_{i+1}')
+    print(f'AVG loss {np.average(losses)}, dis_loss {np.average(dis_loss)}, gen_loss {np.average(gen_loss)}')
+  return m
 
