@@ -1,5 +1,7 @@
 # fool-gan(Make GAN easily!)
 
+## DCGAN
+
 ```
 from dcgan import *
 m = DCGAN()
@@ -9,4 +11,13 @@ G.plot_random(m)
 
 ## Result(DCGAN)
 
-![animated](anima.gif)
+[animation.md](Click me to show animation)
+
+## InfoGAN
+
+```
+from infogan_dc_based import *
+import runner as R
+m = InfoGAN()
+R.train_and_output_infogan(m, 100)
+```
